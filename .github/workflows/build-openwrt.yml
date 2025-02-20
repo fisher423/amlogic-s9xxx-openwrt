@@ -389,9 +389,9 @@ jobs:
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
           
-- name: Set rootfs partition size
-  run: |
-    echo "CONFIG_TARGET_ROOTFS_PARTSIZE=2048" >> .config
+     - name: Set rootfs partition size
+       run: |
+       echo "CONFIG_TARGET_ROOTFS_PARTSIZE=2048" >> .config
     
       - name: Packaging OpenWrt
         if: ${{ steps.clean.outputs.status }} == 'success' && !cancelled()
