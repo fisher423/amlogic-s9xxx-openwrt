@@ -267,6 +267,10 @@ jobs:
           sudo timedatectl set-timezone "${TZ}"
           echo "status=success" >> ${GITHUB_OUTPUT}
 
+      - name: Set rootfs partition size
+        run: |
+          echo "CONFIG_TARGET_ROOTFS_PARTSIZE=2048" >> .config
+
       - name: Create simulated physical disk
         run: |
           mnt_size=$(expr $(df -h /mnt | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 1)
