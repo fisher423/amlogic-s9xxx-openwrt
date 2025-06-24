@@ -226,6 +226,10 @@ on:
         options:
           - save
           - temp
+      openwrt_size:
+        description: "Set the rootfs size(Unit: MiB)."
+        required: false
+        default: ""
       builder_name:
         description: "Set OpenWrt builder signature."
         required: false
