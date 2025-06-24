@@ -1,9 +1,7 @@
-name: Make OpenWrt
-
-on:
-  repository_dispatch:
-  workflow_dispatch:
-    inputs:
+name: "Make OpenWrt"
+author: "https://github.com/ophub/amlogic-s9xxx-openwrt"
+description: "Support Amlogic, Rockchip and Allwinner boxes."
+inputs:
   mode:
     description: "Select script."
     required: false
