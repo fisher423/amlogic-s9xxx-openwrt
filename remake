@@ -113,10 +113,10 @@ uboot_meson_gxbb=("p201.bin" "s905.bin")
 make_board="all"
 
 # Set OpenWrt firmware size (Unit: MiB, boot_mb >= 256, root_mb >= 512)
-boot_mb="128"
-root_mb="2048"
+boot_mb="256"
+root_mb="1024"
 # Set OpenWrt builder signature
-builder_name="fisher423"
+builder_name=""
 
 # Set font color
 STEPS="[\033[95m STEPS \033[0m]"
@@ -487,65 +487,42 @@ download_depends() {
 query_kernel() {
     echo -e "${STEPS} Start querying the latest kernel version..."
 
-    # 改进：使用更严格的版本匹配模式
-    version_pattern="^([0-9]+)\.([0-9]+)(\.([0-9]+))?$"
-
+    # Check the version on the kernel repository
     x="1"
     for key in "${!tags_list[@]}"; do
         {
+            # Query the name of the latest kernel version
             tmp_arr_kernels=()
             down_kernel_list=(${tags_list[${key}]})
             i=1
             for kernel_var in "${down_kernel_list[@]}"; do
                 echo -e "${INFO} (${x}.${i}) Auto query the latest kernel version for [ ${key} - ${kernel_var} ]"
 
-                # 严格验证版本格式
-                if [[ $kernel_var =~ $version_pattern ]]; then
-                    major="${BASH_REMATCH[1]}"
-                    minor="${BASH_REMATCH[2]}"
-                    patch="${BASH_REMATCH[4]}"  # 注意：索引4是因为第三个捕获组包含点号
-                    kernel_verpatch="${major}.${minor}"
-                    echo -e "${INFO} (${x}.${i}) Extracted kernel version components: major=${major}, minor=${minor}, patch=${patch}"
-                else
-                    echo -e "${WARNING} Invalid kernel version format: ${kernel_var}. Using as-is."
-                    tmp_arr_kernels[${i}]="${kernel_var}"
-                    let i++
-                    continue
-                fi
+                # Identify the kernel <VERSION> and <PATCHLEVEL>, such as [ 6.1 ]
+                kernel_verpatch="$(echo ${kernel_var} | awk -F '.' '{print $1"."$2}')"
 
-                # 调试：输出API请求URL
-                echo -e "${INFO} (${x}.${i}) Querying API: ${kernel_api}/releases/expanded_assets/kernel_${key}"
-                
-                # 获取API响应并保存到临时变量用于调试
-                api_response=$(curl -fsSL ${kernel_api}/releases/expanded_assets/kernel_${key} 2>/dev/null)
-                echo -e "${INFO} (${x}.${i}) API response size: ${#api_response} bytes"
-                
-                # 调试：输出前1000个字符
-                echo -e "${INFO} (${x}.${i}) API response snippet: ${api_response:0:1000}..."
-                
-                # 使用更严格的正则表达式匹配
-                available_versions=$(echo "$api_response" | grep -oE "${kernel_verpatch}\.[0-9]+\.tar\.gz" | sed 's/\.tar\.gz//' | sort -urV)
-                
-                # 调试：输出匹配到的所有版本
-                echo -e "${INFO} (${x}.${i}) Matched versions:"
-                echo "$available_versions" | while read -r ver; do echo -e "  - ${ver}"; done
-                
-                # 获取最新版本
-                latest_version=$(echo "$available_versions" | head -n 1)
-                
-                if [[ -n "${latest_version}" ]]; then
+                # Query the latest kernel version
+                latest_version="$(
+                    curl -fsSL \
+                        ${kernel_api}/releases/expanded_assets/kernel_${key} |
+                        grep -oE "${kernel_verpatch}.[0-9]+.tar.gz" | sed 's/.tar.gz//' |
+                        sort -urV | head -n 1
+                )"
+
+                if [[ "${?}" -eq 0 && -n "${latest_version}" ]]; then
                     tmp_arr_kernels[${i}]="${latest_version}"
-                    echo -e "${INFO} (${x}.${i}) Found latest version: ${latest_version}"
                 else
                     tmp_arr_kernels[${i}]="${kernel_var}"
-                    echo -e "${WARNING} (${x}.${i}) No matching version found for ${kernel_verpatch}. Using original version ${kernel_var}"
                 fi
 
-                echo -e "${INFO} (${x}.${i}) [ ${key} - ${tmp_arr_kernels[$i]} ] is selected kernel. \n"
+                echo -e "${INFO} (${x}.${i}) [ ${key} - ${tmp_arr_kernels[$i]} ] is latest kernel. \n"
+
                 let i++
             done
 
+            # Assign the latest kernel version to the array
             tags_list[${key}]="${tmp_arr_kernels[@]}"
+
             let x++
         }
     done
