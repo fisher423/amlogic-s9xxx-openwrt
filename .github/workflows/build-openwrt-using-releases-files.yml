@@ -18,6 +18,7 @@ on:
           - official
           - lede
           - immortalwrt
+          - istoreos
       openwrt_board:
         description: "Select device board"
         required: false
@@ -233,12 +234,12 @@ on:
       builder_name:
         description: "Set OpenWrt builder signature."
         required: false
-        default: "ophub"
+        default: "fisher423"
         type: choice
         options:
           - ophub
           - angel
-          - yourname
+          - fisher423
 
 env:
   TZ: America/New_York
