@@ -487,25 +487,36 @@ download_depends() {
 query_kernel() {
     echo -e "${STEPS} Start querying the latest kernel version..."
 
-    # Check the version on the kernel repository
+    # 改进：添加更灵活的版本匹配模式
+    version_pattern="([0-9]+)\.([0-9]+)(\.([0-9]+))?"
+
     x="1"
     for key in "${!tags_list[@]}"; do
         {
-            # Query the name of the latest kernel version
             tmp_arr_kernels=()
             down_kernel_list=(${tags_list[${key}]})
             i=1
             for kernel_var in "${down_kernel_list[@]}"; do
                 echo -e "${INFO} (${x}.${i}) Auto query the latest kernel version for [ ${key} - ${kernel_var} ]"
 
-                # Identify the kernel <VERSION> and <PATCHLEVEL>, such as [ 6.1 ]
-                kernel_verpatch="$(echo ${kernel_var} | awk -F '.' '{print $1"."$2}')"
+                # 改进：更健壮的版本提取逻辑
+                if [[ $kernel_var =~ $version_pattern ]]; then
+                    major="${BASH_REMATCH[1]}"
+                    minor="${BASH_REMATCH[2]}"
+                    kernel_verpatch="${major}.${minor}"
+                else
+                    echo -e "${WARNING} Invalid kernel version format: ${kernel_var}"
+                    tmp_arr_kernels[${i}]="${kernel_var}"
+                    let i++
+                    continue
+                fi
 
-                # Query the latest kernel version
+                # 改进：更灵活的正则匹配
                 latest_version="$(
                     curl -fsSL \
                         ${kernel_api}/releases/expanded_assets/kernel_${key} |
-                        grep -oE "${kernel_verpatch}.[0-9]+.tar.gz" | sed 's/.tar.gz//' |
+                        grep -oE "${kernel_verpatch}(\.[0-9]+)?\.tar\.gz" | 
+                        sed 's/\.tar\.gz//' |
                         sort -urV | head -n 1
                 )"
 
@@ -520,9 +531,7 @@ query_kernel() {
                 let i++
             done
 
-            # Assign the latest kernel version to the array
             tags_list[${key}]="${tmp_arr_kernels[@]}"
-
             let x++
         }
     done
