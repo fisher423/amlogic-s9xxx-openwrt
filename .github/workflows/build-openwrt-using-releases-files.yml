@@ -1,5 +1,5 @@
 #=====================================================================================
-# https://github.com/ophub/amlogic-s9xxx-openwrt
+# https://github.com/fisher423/amlogic-s9xxx-openwrt
 # Description: Build OpenWrt using releases files
 #=====================================================================================
 
@@ -204,10 +204,10 @@ on:
       kernel_repo:
         description: "Set the kernel repository"
         required: false
-        default: "ophub/kernel"
+        default: "fisher423/kernel"
         type: choice
         options:
-          - ophub/kernel
+          - fisher423/kernel
       kernel_usage:
         description: "Set the tags of the stable kernel."
         required: false
@@ -236,7 +236,7 @@ on:
         default: "fisher423"
         type: choice
         options:
-          - ophub
+          - fisher423
           - angel
           - fisher423
 
@@ -322,7 +322,7 @@ jobs:
           armsr_tarfile_path="openwrt/output"
           [[ -d "${armsr_tarfile_path}" ]] || mkdir -p ${armsr_tarfile_path}
           ln -sf /builder/openwrt ${GITHUB_WORKSPACE}/openwrt
-          ln -sf /builder/openwrt /home/runner/work/_actions/ophub/amlogic-s9xxx-openwrt/main/openwrt
+          ln -sf /builder/openwrt /home/runner/work/_actions/fisher423/amlogic-s9xxx-openwrt/main/openwrt
 
           latest_version=$(curl -s \
                 -H "Accept: application/vnd.github+json" \
